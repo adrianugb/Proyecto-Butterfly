@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+    <head th:replace="~{layout/plantilla :: head}">
+        <title>Butterfly</title>
+    </head>
+    <body>
+        <!-- 1 Sección para crear el botón de agregar, llamará a una ventana modal -->
+        <section th:fragment="botonesAgregar" class="py-4 mb-4 bg-light">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-3">
+                        <button sec:authorize="hasRole('ROLE_ADMIN')"
+                                type="button"
+                                class="btn btn-primary btn-block"
+                                data-bs-toggle="modal"
+                                data-bs-target="#agregarNail">
+                            <i class="fas fa-plus"></i> [[#{nail.agregar}]]
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- 2 Fragmento para agregar nail, es la ventana modal -->
+        <section th:fragment="agregarNail">
+            <div id="agregarNail"
+                 class="modal fade"
+                 tabindex="-1"
+                 aria-labelledby="exampleModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog modal-md">
+                    <div class="modal-content">
+                        <div class="modal-header bg-info text-white">
+                            <h5 class="modal-title">[[#{nail.agregar}]]</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form th:action="@{/nail/guardar}"
+                              th:object="${nail}"
+                              method="POST"
+                              class="was-validated"
+                              enctype="multipart/form-data">
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="idTipo">[[#{nail.idTipo}]]</label>
+                                    <select name="tipo.idTipo" class="form-select">
+                                        <option th:each="t : ${tipos}"
+                                                th:value="${t.idTipo}">[[${t.descripcion}]]</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="descripcion">[[#{nail.descripcion}]]</label>
+                                    <input type="text" class="form-control" name="descripcion" required="true"/>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="detalle">[[#{nail.detalle}]]</label>
+                                    <textarea class="form-control"
+                                              rows="3"
+                                              name="detalle"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="precio">[[#{nail.precio}]]</label>
+                                    <input type="number"
+                                           class="form-control"
+                                           name="precio"
+                                           required="true"/>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="existencias">[[#{nail.existencias}]]</label>
+                                    <input type="number"
+                                           class="form-control"
+                                           name="existencias"
+                                           required="true"/>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="activo">[[#{nail.activo}]]</label>
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           name="activo"
+                                           id="activo"/>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="imagen">[[#{nail.imagen}]]</label>
+                                    <input class="form-control" type="file" name="imagenFile" onchange="readURL(this);"/>
+                                    <img id="blah" src="#" alt="your image" height="200"/>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-primary" type="submit">Guardar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- 3 Sección principal para mostrar la información de la entidad nail -->
+        <section th:fragment="listadoNails" id="nails">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-9">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>[[#{nail.listado}]]</h4>
+                            </div>
+                            <div th:if="${nails != null and !nails.empty}">
+                                <table class="table table-striped table-hover">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>[[#{nail.descripcion}]]</th>
+                                            <th>[[#{nail.precio}]]</th>
+                                            <th>[[#{nail.existencias}]]</th>
+                                            <th>[[#{nail.total}]]</th>
+                                            <th>[[#{nail.tipo}]]</th>
+                                            <th>[[#{nail.activo}]]</th>
+                                            <th sec:authorize="hasRole('ROLE_ADMIN')"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="nail : ${nails}">
+                                            <td>[[${nail.idNail}]]</td>
+                                            <td>[[${nail.descripcion}]]</td>
+                                            <td style="text-align: end">[[${nail.precio}]]</td>
+                                            <td style="text-align: center">[[${nail.existencias}]]</td>
+                                            <td style="text-align: end">[[${nail.precio * nail.existencias}]]</td>
+                                            <td>[[${nail.tipo.descripcion}]]</td>
+                                            <td th:text="${nail.activo} ? 'Activa' : 'Inactiva'"></td>
+                                            <td sec:authorize="hasRole('ROLE_ADMIN')">
+                                                <a th:href="@{/nail/eliminar/}+${nail.idNail}" class="btn btn-danger">
+                                                    <i class="fas fa-trash"></i> [[#{accion.eliminar}]]
+                                                </a>
+                                                <a th:href="@{/nail/modificar/}+${nail.idNail}" class="btn btn-success">
+                                                    <i class="fas fa-pencil"></i> [[#{accion.actualizar}]]
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="text-center p-2" th:if="${nails == null or nails.empty}">
+                                <span>[[#{lista.vacia}]]</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center bg-success text-white mb-3">
+                            <div class="card-body">
+                                <h3>[[#{nail.total}]]</h3>
+                                <h4 class="fs-2"><i class="fas fa-users"></i> [[${totalNails}]]</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- 4 Fragmento que se utiliza en la página modifica.html -->
+        <section th:fragment="editarNail">
+            <div class="row">
+                <div class="col-md-2"></div>
+                <div class="col-md-8">
+                    <form method="POST"
+                          th:action="@{/nail/guardar}"
+                          th:object="${nail}"
+                          class="was-validated"
+                          enctype="multipart/form-data">
+                        <input type="hidden" name="idNail" th:field="*{idNail}"/>
+                        <input type="hidden" name="rutaImagen" th:field="*{rutaImagen}"/>
+                        <section th:replace="~{nail/fragmentos :: botonesEditar}"/>
+                        <div id="details">
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h4>[[#{accion.actualizar}]]</h4>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="mb-3">
+                                                    <label for="idTipo">[[#{nail.idTipo}]]</label>
+                                                    <select name="tipo.idTipo"
+                                                            th:field="*{tipo.idTipo}"
+                                                            class="form-select">
+                                                        <option th:each="t : ${tipos}"
+                                                                th:value="${t.idTipo}">[[${t.descripcion}]]</option>
+                                                    </select>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="descripcion">[[#{nail.descripcion}]]</label>
+                                                    <input type="text" class="form-control"
+                                                           name="descripcion" th:field="*{descripcion}"
+                                                           required="true"/>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="detalle">[[#{nail.detalle}]]</label>
+                                                    <textarea class="form-control"
+                                                              rows="3"
+                                                              name="detalle" th:field="*{detalle}"></textarea>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="precio">[[#{nail.precio}]]</label>
+                                                    <input type="number"
+                                                           class="form-control"
+                                                           name="precio"
+                                                           th:field="*{precio}"
+                                                           required="true"/>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="existencias">[[#{nail.existencias}]]</label>
+                                                    <input type="number"
+                                                           class="form-control"
+                                                           name="existencias"
+                                                           th:field="*{existencias}"
+                                                           required="true"/>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="activo">[[#{nail.activo}]]</label>
+                                                    <input class="form-check-input"
+                                                           type="checkbox"
+                                                           name="activo"
+                                                           id="activo"
+                                                           th:field="*{activo}"/>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="imagen">[[#{nail.imagen}]]</label>
+                                                    <input class="form-control" type="file" name="imagenFile"
+                                                           onchange="readURL(this);"/>
+                                                    <img id="blah" th:src="@{${nail.rutaImagen}}" alt="your image" height="200"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5 Fragmento que se utiliza en el fragmento anterior -->
+        <section th:fragment="botonesEditar">
+            <div class="container py-4 mb-4 bg-light">
+                <div class="row">
+                    <div class="col-md-4 d-grid">
+                        <a th:href="@{/nail/listado}" class="btn btn-primary">
+                            <i class="fas fa-arrow-left"></i> [[#{accion.regresar}]]
+                        </a>
+                    </div>
+                    <div class="col-md-4 d-grid">
+                        <a th:href="@{/nail/eliminar/}+${nail.idNail}" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> [[#{accion.eliminar}]]
+                        </a>
+                    </div>
+                    <div class="col-md-4 d-grid">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check"></i> [[#{accion.guardar}]]
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </body>
+</html>
+
